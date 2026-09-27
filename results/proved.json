@@ -1,0 +1,164 @@
+{
+  "proved_at": "2026-09-27T09:19:56.224Z",
+  "network": "genlayer testnet asimov",
+  "contract": "0xb77E39E020509d81aeB83F175d3c36a4aBD60D51",
+  "unmet": {
+    "i": 0,
+    "applicant": "0x0b57877ec84d96b672cd47d8ea4424283fdb9f6c",
+    "delivery_url": "https://raw.githubusercontent.com/JspIIV/endow/master/docs/delivery-bad.txt",
+    "status": "REJECTED",
+    "verdict": "UNMET",
+    "reason": "The delivery fails every stated criterion: it is not a command-line tool, does not convert CSV to JSON, lacks a README, and has no OSI-approved licence.",
+    "quote": "there is no command-line tool and the source is not published. No licence is stated. Converting to JSON is not supported.",
+    "at": "2026-09-27T08:35:43+00:00"
+  },
+  "unclear": {
+    "i": 1,
+    "applicant": "0x0b57877ec84d96b672cd47d8ea4424283fdb9f6c",
+    "delivery_url": "https://raw.githubusercontent.com/JspIIV/endow/master/docs/no-such-delivery-9f2c.txt",
+    "status": "PENDING",
+    "verdict": "UNCLEAR",
+    "reason": "the delivery page could not be read",
+    "quote": "",
+    "at": "2026-09-27T08:36:00+00:00"
+  },
+  "awarded": {
+    "id": "0",
+    "funder": "0x80519c53f10d731e4ff83a7d9acd69cf98da6258",
+    "opened_at": "2026-09-27T08:35:05+00:00",
+    "title": "csv2json grant",
+    "criteria": "An open-source command-line tool that converts CSV to JSON, with a README documenting usage and an OSI-approved licence.",
+    "reward": 500,
+    "status": "AWARDED",
+    "reviews": 3,
+    "winner": "0x0b57877ec84d96b672cd47d8ea4424283fdb9f6c",
+    "winning_app": 2,
+    "awarded_at": "2026-09-27T09:17:54+00:00",
+    "applications": [
+      {
+        "i": 0,
+        "applicant": "0x0b57877ec84d96b672cd47d8ea4424283fdb9f6c",
+        "delivery_url": "https://raw.githubusercontent.com/JspIIV/endow/master/docs/delivery-bad.txt",
+        "status": "REJECTED",
+        "verdict": "UNMET",
+        "reason": "The delivery fails every stated criterion: it is not a command-line tool, does not convert CSV to JSON, lacks a README, and has no OSI-approved licence.",
+        "quote": "there is no command-line tool and the source is not published. No licence is stated. Converting to JSON is not supported.",
+        "at": "2026-09-27T08:35:43+00:00"
+      },
+      {
+        "i": 1,
+        "applicant": "0x0b57877ec84d96b672cd47d8ea4424283fdb9f6c",
+        "delivery_url": "https://raw.githubusercontent.com/JspIIV/endow/master/docs/no-such-delivery-9f2c.txt",
+        "status": "PENDING",
+        "verdict": "UNCLEAR",
+        "reason": "the delivery page could not be read",
+        "quote": "",
+        "at": "2026-09-27T08:36:00+00:00"
+      },
+      {
+        "i": 2,
+        "applicant": "0x0b57877ec84d96b672cd47d8ea4424283fdb9f6c",
+        "delivery_url": "https://raw.githubusercontent.com/JspIIV/endow/master/docs/delivery-good.txt",
+        "status": "WON",
+        "verdict": "MET",
+        "reason": "The delivery satisfies all three criteria: it is an open-source command-line tool that converts CSV to JSON, it includes a README documenting usage, and it has an OSI-approved licence (MIT).",
+        "quote": "csv2json is an open-source command-line tool that converts a CSV file to JSON. The README below documents installation, usage, flags and examples in full. The source is public on GitHub. Licence: MIT (an OSI-approved licence).",
+        "at": "2026-09-27T08:36:17+00:00"
+      }
+    ]
+  },
+  "award": {
+    "exists": true,
+    "id": "0",
+    "status": "AWARDED",
+    "winner": "0x0b57877ec84d96b672cd47d8ea4424283fdb9f6c",
+    "reward": 500,
+    "delivery_url": "https://raw.githubusercontent.com/JspIIV/endow/master/docs/delivery-good.txt"
+  },
+  "applicant_balance": 500,
+  "size": {
+    "total": 1,
+    "open": 0,
+    "awarded": 1,
+    "awarded_units": 500
+  },
+  "checks": [
+    {
+      "label": "a delivery that misses the criteria is UNMET and the grant stays open",
+      "ok": true
+    },
+    {
+      "label": "an unreadable delivery is UNCLEAR and the grant stays open",
+      "ok": true
+    },
+    {
+      "label": "the qualifying delivery is MET and the grant is AWARDED",
+      "ok": true
+    },
+    {
+      "label": "the reward is credited to the applicant",
+      "ok": true
+    },
+    {
+      "label": "the award names the winner and their delivery",
+      "ok": true
+    },
+    {
+      "label": "a funder cannot apply to their own grant",
+      "ok": true
+    },
+    {
+      "label": "an awarded grant cannot be reviewed or awarded again",
+      "ok": true
+    },
+    {
+      "label": "this run adds one awarded grant and its reward to the book",
+      "ok": true
+    }
+  ],
+  "transcript": [
+    "Endow, proven on GenLayer Asimov",
+    "  contract 0xb77E39E020509d81aeB83F175d3c36a4aBD60D51",
+    "  funder(padv) 0x80519c53f10d731e4ff83a7d9acd69cf98da6258  applicant(ppub) 0x0b57877ec84d96b672cd47d8ea4424283fdb9f6c",
+    "",
+    "padv opened grant #0 (reward 500) with criteria fixed up front",
+    "checking the funder cannot apply to their own grant...",
+    "  applications 0 -> 0 (a funder self-application is refused)",
+    "  (apply transient, wait 8s)",
+    "ppub applied #0 (a delivery that misses the criteria)",
+    "ppub applied #1 (an unreadable delivery)",
+    "ppub applied #2 (a delivery that meets the criteria)",
+    "",
+    "reviewing the missing delivery #0...",
+    "  unmet: grant OPEN, app REJECTED v=UNMET (30s)",
+    "reviewing the unreadable delivery #1...",
+    "  unclear: not settled after poll, retrying",
+    "  (review transient, wait 8s)",
+    "  unclear: grant OPEN, app PENDING v=UNCLEAR (30s)",
+    "reviewing the qualifying delivery #2...",
+    "  (review transient, wait 8s)",
+    "  met: not settled after poll, retrying",
+    "  met: not settled after poll, retrying",
+    "  met: not settled after poll, retrying",
+    "  met: grant AWARDED, app WON v=MET (90s)",
+    "  grant status: AWARDED | The delivery satisfies all three criteria: it is an open-source command-line tool that converts CSV to JSON, it includes a README documenting usage, and it has an OSI-approved licence (MIT).",
+    "",
+    "trying to review again after the award...",
+    "  (review transient, wait 8s)",
+    "  grant status after a further review attempt: AWARDED",
+    "applicant balance 0 -> 500 (reward won)",
+    "award: winner 0x0b57877e… delivery https://raw.githubusercontent.com/JspIIV/endow/master/docs/delivery-good.txt",
+    "book: {\"total\":1,\"open\":0,\"awarded\":1,\"awarded_units\":500}",
+    "",
+    "  ok   a delivery that misses the criteria is UNMET and the grant stays open",
+    "  ok   an unreadable delivery is UNCLEAR and the grant stays open",
+    "  ok   the qualifying delivery is MET and the grant is AWARDED",
+    "  ok   the reward is credited to the applicant",
+    "  ok   the award names the winner and their delivery",
+    "  ok   a funder cannot apply to their own grant",
+    "  ok   an awarded grant cannot be reviewed or awarded again",
+    "  ok   this run adds one awarded grant and its reward to the book",
+    "",
+    "8 checks. The delivery met the published criteria, and the first that did was paid."
+  ]
+}
