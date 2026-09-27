@@ -1,0 +1,9 @@
+{
+  "name": "endow",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "An open-criteria grant that pays the first delivery a GenLayer round judges to meet the criteria.",
+  "scripts": { "deploy": "node scripts/deploy.mjs", "prove": "node scripts/prove.mjs" },
+  "dependencies": { "ethers": "^6", "genlayer-js": "1.1.8" }
+}

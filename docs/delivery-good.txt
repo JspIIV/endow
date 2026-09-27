@@ -1,0 +1,11 @@
+csv2json - a small command-line tool
+
+csv2json is an open-source command-line tool that converts a CSV file to JSON.
+
+Usage:
+  csv2json input.csv > output.json
+  csv2json --pretty input.csv
+
+The README below documents installation, usage, flags and examples in full. The
+source is public on GitHub. Licence: MIT (an OSI-approved licence). Contributions
+welcome.

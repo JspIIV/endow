@@ -1,0 +1,5 @@
+CSVPeek - a CSV viewer
+
+CSVPeek is a web app for previewing CSV files in your browser. Drag a file in and
+scroll the table. It is a hosted product; there is no command-line tool and the
+source is not published. No licence is stated. Converting to JSON is not supported.
