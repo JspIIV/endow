@@ -1,42 +1,39 @@
 # { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
-"""Endow: an open-criteria grant that pays the first delivery a round judges to meet the criteria, no committee.
+"""Endow: an open-criteria grant that escrows a real reward and pays the first delivery a round judges to meet the criteria.
 
-A grant is usually decided behind closed doors: someone reads the applications and picks,
-and the criteria bend to the choice. Endow fixes the criteria first, in public, and lets the
-work decide. A funder posts plain-language criteria and escrows a reward. Anyone applies by
-naming one public page that is their delivery: a repo, a demo, a document, whatever the
-criteria call for. Then anyone can ask the contract to review an application. The contract
-fetches that applicant's own page and a round of GenLayer validators reads it against the
-funder's criteria and decides whether it meets them. The first delivery judged to meet the
-criteria is awarded the reward, and the grant closes.
+A grant is usually decided behind closed doors, and the criteria bend to the choice.
+Endow fixes the criteria first, in public, and backs the reward with real value. A funder
+opens a grant by sending the reward as native value, which the contract holds in escrow.
+Anyone applies by naming one public page as their delivery. Then anyone can ask the contract
+to review an application: it fetches that page and a round of GenLayer validators reads it
+against the funder's fixed criteria. The first delivery judged to meet them is paid the
+escrowed reward, once, and the grant closes.
 
-The evidence is the applicant's own delivery, judged against criteria that were set before
-any application arrived. The funder cannot move the goalposts after seeing the work, and no
-reviewer's opinion stands in for the round: what settles it is the page and the published
-criteria.
+The money is real. Opening a grant debits the funder, the escrow is held by the contract,
+and the winning applicant receives it exactly once through a native transfer. If no one has
+applied yet, the funder can cancel and take the escrow back.
 
 ## What it settles, per application
 
-    MET      the delivery meets the criteria -> the FIRST such application is AWARDED the reward
+    MET      the delivery meets the criteria -> the FIRST such application is PAID the escrow
     UNMET    the delivery was read and does not meet the criteria -> that application is rejected
-    UNCLEAR  the delivery could not be read, or does not settle it -> nothing changes, it can be reviewed again
+    UNCLEAR  the delivery could not be read, or does not settle it -> nothing changes
 
-Only MET pays, only the first one, and only while the grant is still open. A later winning
-review cannot overwrite a grant that is already awarded.
+Only MET pays, only the first one, and only while the grant is open.
 
 ## What it refuses
 
-The criteria and the reward are fixed when the grant is opened and cannot be edited. A funder
-cannot apply to their own grant. An application is bound to its applicant, and the reward is
-paid to that applicant, not to whoever triggers the review. An unreadable delivery awards
-nothing. Once a grant is awarded it is closed for good.
+The criteria are fixed when the grant is opened and cannot be edited. A grant must be funded:
+open_grant is payable and the reward is exactly the value sent. A funder cannot apply to their
+own grant. An application is bound to its applicant, and the escrow is paid to that applicant.
+An unreadable delivery pays nothing. Once paid or cancelled a grant is closed for good.
 
 ## Where it stops, plainly
 
 It judges a delivery against criteria in words, which is a judgement, not a proof: write
 criteria a stranger could apply the same way twice, and accept a delivery a third party can
-open. It pays the first delivery that meets the bar, not the best one. On Asimov the reward
-moves as a credited balance rather than native value.
+open. It pays the first delivery that meets the bar, not the best one. Native value moves on
+Studio; it is held and paid here through the standard payable and emit_transfer path.
 """
 
 from genlayer import *
@@ -49,6 +46,7 @@ VERDICTS = (MET, UNMET, UNCLEAR)
 
 OPEN = "OPEN"
 AWARDED = "AWARDED"
+CANCELLED = "CANCELLED"
 
 PENDING = "PENDING"
 REJECTED = "REJECTED"
@@ -60,10 +58,23 @@ MAX_URL = 300
 MAX_PAGE = 6000
 MAX_REASON = 300
 MAX_QUOTE = 300
-MAX_AMOUNT = 10 ** 30
 MAX_APPS = 100
 
 FETCH_FAILED = "__FETCH_FAILED__"
+
+
+@gl.evm.contract_interface
+class _Recipient:
+    """An externally owned account we pay native value to, in the faucet.py style."""
+    class View:
+        pass
+
+    class Write:
+        pass
+
+
+def _pay(addr: str, amount: int) -> None:
+    _Recipient(Address(addr)).emit_transfer(value=int(amount))
 
 
 def _now_iso() -> str:
@@ -81,13 +92,6 @@ def _whole(value) -> int:
         return int(str(value).strip())
     except Exception:
         return -1
-
-
-def _amount(value):
-    n = _whole(value)
-    if n <= 0 or n > MAX_AMOUNT:
-        return None
-    return n
 
 
 def _addr(value) -> str:
@@ -169,35 +173,39 @@ Reply with bare JSON and nothing else:
 
 
 class Endow(gl.Contract):
-    """Open-criteria grants, each paid to the first delivery a round judges to meet the published criteria."""
+    """Open-criteria grants, each escrowing a real reward paid to the first delivery that meets the criteria."""
 
     # str(id) -> the grant as JSON, including its applications.
     items: TreeMap[str, str]
     ids: DynArray[str]
-    # address -> credited units (rewards won), as a JSON int.
-    balances: TreeMap[str, str]
 
     def __init__(self) -> None:
         pass
 
-    def _credit(self, who: str, amount: int) -> None:
-        cur = self.balances.get(who, None)
-        base = int(cur) if cur is not None else 0
-        self.balances[who] = str(base + int(amount))
+    @gl.public.write.payable
+    def open_grant(self, title: str, criteria: str) -> str:
+        """Open a grant by sending the reward as native value. Bound to the caller (the funder).
 
-    @gl.public.write
-    def open_grant(self, title: str, criteria: str, reward: str) -> str:
-        """Post a grant: fixed criteria and an escrowed reward. Bound to the caller (the funder)."""
+        The reward is exactly the value attached; the contract holds it in escrow. This method
+        never raises once value is attached: on any invalid input the value is paid straight
+        back to the funder and nothing is created.
+        """
         funder = gl.message.sender_address.as_hex.lower()
+        value = int(gl.message.value)
         ttl = _clip(title, MAX_TITLE)
         crit = _clip(criteria, MAX_CRITERIA)
-        amt = _amount(reward)
-        if not ttl:
-            return json.dumps({"ok": False, "error": "give the grant a title"})
-        if len(crit) < 12:
-            return json.dumps({"ok": False, "error": "state the criteria in plain words"})
-        if amt is None:
-            return json.dumps({"ok": False, "error": "give a positive reward as a whole number of units"})
+
+        problem = ""
+        if value <= 0:
+            problem = "a grant must be funded; attach the reward as native value"
+        elif not ttl:
+            problem = "give the grant a title"
+        elif len(crit) < 12:
+            problem = "state the criteria in plain words"
+        if problem:
+            if value > 0:
+                _pay(funder, value)  # refund, never keep an unaccepted deposit
+            return json.dumps({"ok": False, "error": problem, "refunded": value})
 
         gid = str(len(self.ids))
         record = {
@@ -206,7 +214,7 @@ class Endow(gl.Contract):
             "opened_at": _now_iso(),
             "title": ttl,
             "criteria": crit,
-            "reward": amt,
+            "reward": str(value),
             "status": OPEN,
             "reviews": 0,
             "winner": "",
@@ -216,7 +224,7 @@ class Endow(gl.Contract):
         }
         self.items[gid] = json.dumps(record)
         self.ids.append(gid)
-        return json.dumps({"ok": True, "id": gid, "status": OPEN, "reward": amt})
+        return json.dumps({"ok": True, "id": gid, "status": OPEN, "reward": str(value)})
 
     @gl.public.write
     def apply(self, grant_id: str, delivery_url: str) -> str:
@@ -247,11 +255,33 @@ class Endow(gl.Contract):
         return json.dumps({"ok": True, "grant_id": gid, "application": idx, "status": PENDING})
 
     @gl.public.write
-    def review(self, grant_id: str, app_index: str) -> str:
-        """Review one application: fetch its delivery and judge it against the grant's criteria. Open to anybody.
+    def cancel(self, grant_id: str) -> str:
+        """The funder may cancel an open grant that has no applications yet, and reclaim the escrow."""
+        who = gl.message.sender_address.as_hex.lower()
+        gid = str(grant_id).strip()
+        stored = self.items.get(gid, None)
+        if stored is None:
+            return json.dumps({"ok": False, "error": "no grant with that id"})
+        record = json.loads(stored)
+        if record["status"] != OPEN:
+            return json.dumps({"ok": False, "error": "only an open grant can be cancelled", "status": record["status"]})
+        if who != record["funder"]:
+            return json.dumps({"ok": False, "error": "only the funder may cancel their grant"})
+        if len(record.get("applications", [])) > 0:
+            return json.dumps({"ok": False, "error": "cannot cancel once there are applications"})
 
-        The delivery is fetched by the contract inside the round; nobody passes in the verdict.
-        The first application judged MET, while the grant is still open, is awarded the reward.
+        record["status"] = CANCELLED
+        record["awarded_at"] = _now_iso()
+        self.items[gid] = json.dumps(record)
+        _pay(record["funder"], int(record["reward"]))  # return the escrow
+        return json.dumps({"ok": True, "id": gid, "status": CANCELLED, "refunded": record["reward"]})
+
+    @gl.public.write
+    def review(self, grant_id: str, app_index: str) -> str:
+        """Review one application against the grant's criteria; the first MET is paid the escrow. Open to anybody.
+
+        The delivery is fetched inside the round; nobody passes in the verdict. A MET verdict,
+        while the grant is still open, awards and pays the escrow to that applicant, exactly once.
         """
         gid = str(grant_id).strip()
         idx = _whole(app_index)
@@ -301,7 +331,7 @@ class Endow(gl.Contract):
             principle=(
                 f"Both answers must carry the same value in the field named verdict, one of "
                 f"{MET}, {UNMET} or {UNCLEAR}. That single field decides whether a grant's reward is "
-                "awarded to this applicant, so two readers differing on it disagree about whether the "
+                "paid to this applicant, so two readers differing on it disagree about whether the "
                 "delivery meets the criteria, not about wording. The other fields are not compared, and "
                 "the two readers will not have fetched byte-identical copies of the page."
             ),
@@ -334,44 +364,35 @@ class Endow(gl.Contract):
             current["winner"] = capp["applicant"]
             current["winning_app"] = idx
             current["awarded_at"] = _now_iso()
-            self._credit(capp["applicant"], int(current["reward"]))
             awarded = True
         elif outcome == REJECTED:
             capp["status"] = REJECTED
-        # PENDING (UNCLEAR): leave the application open to be reviewed again.
         capps[idx] = capp
         current["applications"] = capps
         self.items[gid] = json.dumps(current)
+        if awarded:
+            _pay(capp["applicant"], int(current["reward"]))  # pay the escrow to the winner, once
         return json.dumps({"ok": True, "grant_id": gid, "application": idx, "verdict": verdict,
                            "status": current["status"], "awarded": awarded, "reason": reason})
 
     # ------------------------------------------------------------------ reads
 
     @gl.public.view
-    def balance(self, address: str) -> str:
-        """Units credited to an address: grant rewards won."""
-        a = _addr(address)
-        if not a:
-            return json.dumps({"exists": False, "balance": 0})
-        cur = self.balances.get(a, None)
-        return json.dumps({"exists": cur is not None, "address": a, "balance": int(cur) if cur is not None else 0})
-
-    @gl.public.view
     def award(self, grant_id: str) -> str:
-        """Who won a grant and with which delivery, for a payout contract to act on."""
+        """Who won a grant, the reward paid, and with which delivery."""
         gid = str(grant_id).strip()
         stored = self.items.get(gid, None)
         if stored is None:
             return json.dumps({"exists": False})
         record = json.loads(stored)
-        winner = record.get("winner", "")
         delivery = ""
         wa = int(record.get("winning_app", -1))
         apps = record.get("applications", [])
         if 0 <= wa < len(apps):
             delivery = apps[wa].get("delivery_url", "")
         return json.dumps({"exists": True, "id": gid, "status": record["status"],
-                           "winner": winner, "reward": record["reward"], "delivery_url": delivery})
+                           "winner": record.get("winner", ""), "reward": record["reward"],
+                           "delivery_url": delivery})
 
     @gl.public.view
     def status(self, grant_id: str) -> str:
@@ -396,19 +417,26 @@ class Endow(gl.Contract):
 
     @gl.public.view
     def size(self) -> str:
-        """How many grants are open and awarded, and the total rewarded."""
+        """How many grants are open, awarded and cancelled, and the total escrow awarded."""
         open_n = 0
         awarded = 0
+        cancelled = 0
+        escrow_open = 0
         awarded_units = 0
         for position in range(len(self.ids)):
             record = json.loads(self.items[self.ids[position]])
+            r = int(record["reward"])
             if record["status"] == OPEN:
                 open_n += 1
+                escrow_open += r
             elif record["status"] == AWARDED:
                 awarded += 1
-                awarded_units += int(record["reward"])
+                awarded_units += r
+            elif record["status"] == CANCELLED:
+                cancelled += 1
         return json.dumps({"total": len(self.ids), "open": open_n, "awarded": awarded,
-                           "awarded_units": awarded_units})
+                           "cancelled": cancelled, "escrow_open": str(escrow_open),
+                           "awarded_units": str(awarded_units)})
 
     @gl.public.view
     def page(self, start: str, count: str) -> str:

@@ -1,6 +1,6 @@
 {
   "network": "genlayer testnet asimov",
-  "address": "0xb77E39E020509d81aeB83F175d3c36a4aBD60D51",
-  "tx": "0x47866cbec55af25c1f80acd44c9d8282a2c95dae2d2119ba18083ad69a659076",
-  "deployed_at": "2026-09-27T08:32:30.655Z"
+  "address": "0x30D788e6E43a685aB3a87EC8eE77C3925ABf9268",
+  "tx": "0x59fc048dddce88a70ca8061b68c85306346be220299f5066e3df49ee8a7ce5ad",
+  "deployed_at": "2026-10-02T19:07:15.853Z"
 }

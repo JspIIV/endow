@@ -1,0 +1,101 @@
+{
+  "proved_at": "2026-10-02T19:05:20.702Z",
+  "network": "genlayer studionet",
+  "contract": "0xa219C054Db32E2fec87993C5A9D8d40e5D951Be9",
+  "reward_wei": "1000000000000000000",
+  "escrow_in": "1000000000000000000",
+  "winner_delta": "1000000000000000000",
+  "contract_delta": "1000000000000000000",
+  "award": {
+    "exists": true,
+    "id": "0",
+    "status": "AWARDED",
+    "winner": "0x0b57877ec84d96b672cd47d8ea4424283fdb9f6c",
+    "reward": "1000000000000000000",
+    "delivery_url": "https://raw.githubusercontent.com/JspIIV/endow/master/docs/delivery-good.txt"
+  },
+  "size": {
+    "total": 2,
+    "open": 0,
+    "awarded": 1,
+    "cancelled": 1,
+    "escrow_open": "0",
+    "awarded_units": "1000000000000000000"
+  },
+  "checks": [
+    {
+      "label": "opening a grant escrows the value sent into the contract",
+      "ok": true
+    },
+    {
+      "label": "the stored reward equals the value sent",
+      "ok": true
+    },
+    {
+      "label": "a delivery that misses the criteria is UNMET and the grant stays open",
+      "ok": true
+    },
+    {
+      "label": "a qualifying delivery is MET and the grant is AWARDED",
+      "ok": true
+    },
+    {
+      "label": "the escrow is actually paid to the winner on chain",
+      "ok": true
+    },
+    {
+      "label": "and it leaves the contract",
+      "ok": true
+    },
+    {
+      "label": "the award names the winner and delivery",
+      "ok": true
+    },
+    {
+      "label": "a funded grant can be cancelled by the funder, returning the escrow",
+      "ok": true
+    }
+  ],
+  "transcript": [
+    "Endow real escrow, proven on GenLayer Studio",
+    "  rpc https://studio.genlayer.com/api",
+    "  funder(padv) 0x80519c53f10d731e4ff83a7d9acd69cf98da6258  applicant(ppub) 0x0b57877ec84d96b672cd47d8ea4424283fdb9f6c",
+    "  funder balance 3125425666666666666668  applicant balance 2135988666666666666665",
+    "",
+    "using existing contract 0xa219C054Db32E2fec87993C5A9D8d40e5D951Be9",
+    "",
+    "opening a grant with the reward attached as native value (1 GEN)...",
+    "  grant #0 reward=1000000000000000000 status=OPEN",
+    "  contract balance 0 -> 1000000000000000000 (escrow held)",
+    "",
+    "ppub applies with a delivery that misses the criteria, then one that meets them...",
+    "  applications: #0 (misses), #1 (meets)",
+    "",
+    "reviewing the missing delivery #0...",
+    "  unmet: grant OPEN, app REJECTED v=UNMET (18s)",
+    "reviewing the qualifying delivery #1... (this should pay the escrow to ppub)",
+    "  met: grant AWARDED, app WON v=MET (18s)",
+    "  grant status AWARDED | The delivery satisfies all criteria: it's an open-source command-line tool that converts CSV to JSON, includes usage documentation, and has an OSI-approved MIT license.",
+    "  payout landed after ~30s",
+    "  winner balance 2135988666666666666665 -> 2136988666666666666665 (delta 1000000000000000000)",
+    "  contract balance 1000000000000000000 -> 0 (delta -1000000000000000000)",
+    "  award winner 0x0b57877ec84d96b672cd47d8ea4424283fdb9f6c reward 1000000000000000000",
+    "",
+    "opening a second grant and cancelling it to reclaim the escrow...",
+    "  grant #1 CANCELLED",
+    "  (funder balance moves with gas and the refund; status CANCELLED confirms the escrow returned)",
+    "",
+    "book: {\"total\":2,\"open\":0,\"awarded\":1,\"cancelled\":1,\"escrow_open\":\"0\",\"awarded_units\":\"1000000000000000000\"}",
+    "",
+    "  ok   opening a grant escrows the value sent into the contract",
+    "  ok   the stored reward equals the value sent",
+    "  ok   a delivery that misses the criteria is UNMET and the grant stays open",
+    "  ok   a qualifying delivery is MET and the grant is AWARDED",
+    "  ok   the escrow is actually paid to the winner on chain",
+    "  ok   and it leaves the contract",
+    "  ok   the award names the winner and delivery",
+    "  ok   a funded grant can be cancelled by the funder, returning the escrow",
+    "",
+    "8 checks. The reward was escrowed on open and paid to the winner on chain, once."
+  ]
+}
